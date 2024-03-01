@@ -11,6 +11,17 @@
 4. [References](#references)
 <br>
 
+//to remove in the end
+-	Questions to Guide the Analysis
+When has the sample initially been found in the wild?
+In which time period was it (mainly) active?
+The sample drops another file. Which file and where?
+Which possible functionalities does the dropped file provide?
+What servers are contacted? In which time period were they active?
+
+
+
+
 ## Initial Analysis <a name="init_analysis"></a>
 ### To be packed, or not to be packed?
 #### Detect it Easy
@@ -41,25 +52,90 @@ To note is the fact, that in Windows it is completely normal, that the .data sec
 In the case of this sample, the differences in size between raw and virtual does not seem to convey the impression, that the file is packed (in contrast to the results of Detect it Easy). 
 
 ### Strings
-Some but not all of the interesting strings, that were found are listed here. Thousands of strings were found (the real number is ommited, since both PeStudio and DIE presented us with different numbers).
-
+Some but not all of the interesting strings, that were found are listed here. Thousands of strings were found.
 <br>
 !Restore the window to normal size<br>
 version.dll<br>
-
-
+GetCursorPos<br>
+GetDesktopWindow<br>
+GetPixel<br>
+...
 <br>
 
-### Unpacking with UPX
+
+
+## Dynamic Analsis <a name="dynamic_analysis"></a>
+After having gathered some initial information, it is not a bad idea to try to run the malware, to get an initial idea on how the malware operates.  
+
+### RegShot
+Taking a Registry Shot before and after the malware has been run results in the following discrepancies. Some parts were ommited due to the sheer size. The original file has been added in the task1 folder. 
+
+```C
+[...]
+Keys added: 2
+----------------------------------
+HKU\S-1-5-21-662359748-1381274119-3770326108-1001\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\SessionInfo\1\ApplicationViewManagement\W32:000000000006050E
+HKU\S-1-5-21-662359748-1381274119-3770326108-1001\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\SessionInfo\1\ApplicationViewManagement\W32:00000000000A030A
+[...]
+Values added: 27
+----------------------------------
+HKU\.DEFAULT\Software\Classes\Local Settings\MuiCache\c\417C44EB\@C:\Windows\system32\notepad.exe,-469: "Text Document"
+
+[...]
+----------------------------------
+Values modified: 33
+----------------------------------
+[...]
+```
+
+
+### ProcessMonitor
+A new file "ntoskrnl.exe" is spawned at the location C:\Windows\system32\ntoskrnl.exe
+<br><img src="img/ProcMon.png" width="600"><br>
+
 
 
 ## Static Analysis <a name="static_analysis"></a>
 
 ### Imports
 #### IDA64
+*task1.exe*
+No luck with IDA 64, since we got the following notification.
+<br><img src="img/IDA_error.png" width="500"><br>
+
+#### Ghidra
+*task1.exe*
+Looking at the packed malware will result in much of the data being unrecognized by Ghidra.
+
+```C
+       1000:00c3 00               ??         00h
+       1000:00c4 00               ??         00h
+       1000:00c5 00               ??         00h
+       1000:00c6 00               ??         00h
+       1000:00c7 00               ??         00h
+       1000:00c8 00               ??         00h
+       1000:00c9 00               ??         00h
+       1000:00ca 00               ??         00h
+       1000:00cb 00               ??         00h
+       1000:00cc 00               ??         00h
+       1000:00cd 00               ??         00h
+       1000:00ce 00               ??         00h
+       1000:00cf 00               ??         00h
+       1000:00d0 00               ??         00h
+       1000:00d1 00               ??         00h
+       1000:00d2 00               ??         00h
+       1000:00d3 00               ??         00h
+       1000:00d4 00               ??         00h
+       1000:00d5 00               ??         00h
+       1000:00d6 00               ??         00h
+       1000:00d7 00               ??         00h
+       1000:00d8 00               ??         00h
+```
+
+
+
 
 ### Exports
-#### IDA64
 
 
 ### Disassembly
@@ -67,7 +143,6 @@ version.dll<br>
 
 
 
-## Dynamic Analsis <a name="dynamic_analysis"></a>
 
 
 ## References <a name="references"></a>
