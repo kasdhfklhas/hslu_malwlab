@@ -53,6 +53,7 @@ In the case of this sample, the differences in size between raw and virtual does
 
 ### Strings
 Some but not all of the interesting strings, that were found are listed here. Thousands of strings were found.
+
 <br>
 !Restore the window to normal size<br>
 version.dll<br>
@@ -90,12 +91,53 @@ Values modified: 33
 
 
 ### ProcessMonitor
-A new file "ntoskrnl.exe" is spawned at the location C:\Windows\system32\ntoskrnl.exe
+To better monitor the malware process, the program "Process Monitor" is run simultaneously as the sample. As soon as the malware is running, we can see some unusual behavior. A new file "ntoskrnl.exe" is spawned at the location C:\Windows\system32\ntoskrnl.exe.
 <br><img src="img/ProcMon.png" width="600"><br>
+
+### Networking 
+In the following passage, we will try to find out, to which services the malware tries to connect to.
+
+#### INetSim
+We set up an internal network in the range of 192.168.100.0/24 and assigned the IP 192.168.100.100 to the infected Windows 10 VM and 192.168.100.101 to the Kali VM running INetSim. We also changed the DNS-server of the Windows 10 VM with the IP of the interceptor (kali VM). Both files `/etc/network/interfaces` and `/etc/inetsim/inetsim.conf` have been modified in the kali machine, by adding the following lines:
+
+*/etc/network/interfaces*
+```
+auto [INTERFACE NAME]
+iface [INTERFACE NAME] inet static
+address 192.168.100.101
+netmask 255.255.255.0
+```
+
+*/etc/inetsim/inetsim.conf*
+```
+Under the section **# service_bind_address** add `service_bind_address 192.168.100.101` (the IP of my kali VM). "0.0.0.0" should also work.
+
+Under the section **# dns_default_ip** add `dns_default_ip 192.168.100.101` (the IP of my kali VM).
+```
+
+With this approach we hope to intercept the traffic of the infected machine, such that we can determine the connections which the malware tries to make.
+
+Running INetSim with `sudo inetsim`
+<br>
+<img src="img/INetSim.png" width="400">
+<br>
+As seen in the screenshot, we are specifically targetting the protocols such as https, ftp etc.
+
+Let's try to run the malware and see, if the kali VM picks up anything.
+The logs are created after terminating the INetSim session. They can be found at `/var/log/inetsim/report/report.XXXX.txt`.
+Unfortunately, since no report has been created, the malware did not try to establish connections via these protocols.
+No luck this time.
+
+#### Wireshark
 
 
 
 ## Static Analysis <a name="static_analysis"></a>
+### Entry Point
+
+Base Address: *00400000*
+
+Entry point: *00412496*
 
 ### Imports
 #### IDA64
@@ -116,20 +158,6 @@ Looking at the packed malware will result in much of the data being unrecognized
        1000:00c8 00               ??         00h
        1000:00c9 00               ??         00h
        1000:00ca 00               ??         00h
-       1000:00cb 00               ??         00h
-       1000:00cc 00               ??         00h
-       1000:00cd 00               ??         00h
-       1000:00ce 00               ??         00h
-       1000:00cf 00               ??         00h
-       1000:00d0 00               ??         00h
-       1000:00d1 00               ??         00h
-       1000:00d2 00               ??         00h
-       1000:00d3 00               ??         00h
-       1000:00d4 00               ??         00h
-       1000:00d5 00               ??         00h
-       1000:00d6 00               ??         00h
-       1000:00d7 00               ??         00h
-       1000:00d8 00               ??         00h
 ```
 
 
