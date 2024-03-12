@@ -180,13 +180,27 @@ This chapter provides an attempt of our analysis of the task1.exe file and it's 
 * only one export with the unusual name *SDASQFddefgshdSSSgfdtEghfllTDFSSSSS*
 
 ### Ghidra
-Since we couldn't get the malware to propagate the setupapi.exe file, we instead ran it (as already stated) with AnyRun. AnyRun let's you download the unpacked binary, which is exactly the file we are going to look at in ghidra.
+Both task1.exe and setupapi.exe have been analyze with IDA and Ghidra. Unfortunately IDA refused to open both of the files, stating they would contain "maliscious behavior". We instead opted for Ghidra and tried to find out as much as possible with the code and time given.
+Not everything has been brought to paper, since for example task1.exe was packed and the resulting analysis fell out short.
+It is also to be stated that the files task1.exe and the task1.bin files were checked upon. The latter has been provided by the previously mentioned file AnyRun, since we could not retrieve the actual setupapi.exe file via VM.
 
+*task1.exe*
+Packed to some degree. Write-up is ommited, since no useful information has been found out.
+
+*task1.bin*
+From our understanding, this binary contains the unpacked variant of the original file. In such a case, we should see process, on how the setupapi.exe file is created and placed into the directory.
+<br><img src="img/task1_binary_graph.png" width="250"><br>
+Unfortunately, just like before, not much information could be gathered. On one hand due to the lack of knowledge from our part and on the other hand because of some missing references in the code.  
+<br><img src="img/ghidra_undefined_ref.png" width="600"><br>
 
 
 
 
 ## Summary <a name="summary"></a>
+
+
+
+
 
 
 
