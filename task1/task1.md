@@ -5,12 +5,8 @@
 - Date: *28.02.2024*
 - Due Date: *13.03.2024*
 
-## Table of Contents
-1. [Initial Analysis](#init_analysis)
-2. [Static Analysis](#static_analysis)
-3. [Dynamic Analysis](#dynamic_analysis)
-4. [References](#references)
-<br>
+## Introduction
+This write-up contains an analysis of the task1.exe file of the first MALWLAB assignment. The following questions were used (not exclusively) as a guide line throughout this text.
 
 *Questions to Guide the Analysis*<br>
 * When has the sample initially been found in the wild?
@@ -19,10 +15,18 @@
 * Which possible functionalities does the dropped file provide?
 * What servers are contacted? In which time period were they active?
 
+Furthermore a table of contents was added to provide some clarity between all the chapter and to quickly jump from one to another.
 
-
+## Table of Contents
+1. [Initial Analysis](#init_analysis)
+2. [Dynamic Analysis](#dynamic_analysis)
+3. [Static Analysis](#static_analysis)
+4. [Summary](#summary)
+5. [References](#references)
+<br>
 
 ## Initial Analysis <a name="init_analysis"></a>
+The following chapter will present an initial analysis, separated from the static and dynamic analysis presented in direct succession. This chapter consists primarely of information gathering, which is used as basis for the following chapters.
 
 ### Virus Total
 
@@ -121,7 +125,7 @@ Since running the malware in a VM did not result in any file propagation, a seco
 
 
 ### Networking 
-In the following passage, we will try to find out, to which services the malware tries to connect to.
+In the following passage, we will try to find out, to which services (if any) the malware tries to connect to.
 
 #### INetSim
 We set up an internal network in the range of 192.168.100.0/24 and assigned the IP 192.168.100.100 to the infected Windows 10 VM and 192.168.100.101 to the Kali VM running INetSim. We also changed the DNS-server of the Windows 10 VM with the IP of the interceptor (kali VM). Both files `/etc/network/interfaces` and `/etc/inetsim/inetsim.conf` have been modified in the kali machine, by adding the following lines:
@@ -159,41 +163,30 @@ A thorough write-up of this paragraph has been ommited, since no network activit
 
 
 ## Static Analysis <a name="static_analysis"></a>
-### Entry Point
-
-Base Address: *00400000*
-
-Entry point: *00412496*
+This chapter provides an attempt of our analysis of the task1.exe file and it's propagated setupapi.exe file. It is to be noted, that a deeper static analysis has been approached with IDA and Ghidra on the task1.exe file, but due to it being packed and due to time constraints, not much has been found out.
 
 ### Imports
-#### IDA64
 *task1.exe*
-No luck with IDA 64, since we got the following notification.
-<br><img src="img/IDA_error.png" width="500"><br>
+* Registry Manipulation via ADVAPI32.dll: *RegCreateKeyA*, *RegSetValueExA*, *RegOpenKeyA*
+* Mouse Movements and Monitor States via USER32.dll: *GetCursorPos*m *GetPixel*
 
-#### Ghidra
-*task1.exe*
-Looking at the packed malware will result in much of the data being unrecognized by Ghidra.
 
-```C
-       1000:00c3 00               ??         00h
-       1000:00c4 00               ??         00h
-       1000:00c5 00               ??         00h
-       1000:00c6 00               ??         00h
-       1000:00c7 00               ??         00h
-       1000:00c8 00               ??         00h
-       1000:00c9 00               ??         00h
-       1000:00ca 00               ??         00h
-```
-
+*setupapi.exe*
 
 
 
 ### Exports
+*task1.exe*
+* only one export with the unusual name *SDASQFddefgshdSSSgfdtEghfllTDFSSSSS*
+
+### Ghidra
+Since we couldn't get the malware to propagate the setupapi.exe file, we instead ran it (as already stated) with AnyRun. AnyRun let's you download the unpacked binary, which is exactly the file we are going to look at in ghidra.
 
 
-### Disassembly
-#### IDA64
+
+
+
+## Summary <a name="summary"></a>
 
 
 
@@ -201,4 +194,4 @@ Looking at the packed malware will result in much of the data being unrecognized
 
 ## References <a name="references"></a>
 - Practical Malware Analysis: The Hands-On Guide to Dissecting Malicious Software - by Michael Sikorski & Andrew Honig (also some explanatory passages where cited from the book unaltered)
-
+- Online Sandboxing Tool AnyRun - https://any.run/
