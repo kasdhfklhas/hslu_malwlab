@@ -28,10 +28,19 @@ Furthermore a table of contents was added to provide some clarity between all th
 ## Initial Analysis <a name="init_analysis"></a>
 The following chapter will present an initial analysis, separated from the static and dynamic analysis presented in direct succession. This chapter consists primarely of information gathering, which is used as basis for the following chapters.
 
-### Virus Total
+### Important Timestamps
 
-//2do jonas
+#### Virus Total
+* Category: *Trojan*
+* Creation Time: *2020-09-16 10:57:03 UTC*
+* First Seen In The Wild: *2023-03-05 01:16:27 UTC*
+* First Submission: *2020-09-16 11:29:11 UTC*
+* Last Submission: *2024-03-11 20:14:27 UTC*
 
+#### Detect It Easy
+DiE presents us with the following summary screen.
+<br><img src="img/DIE_summary.png" width="400"><br>
+Compiler Stamp: 2020-09-16 12:57:03
 
 ### To be packed, or not to be packed?
 #### Detect it Easy
@@ -41,9 +50,6 @@ Opening the malware via the program leads to the following graph:
 <br>
 As we can see, the third section (section(3), .rsrc section) has the highest entropy, peaking at 7.9. It always depends on the definition, at which height the entropy is considered to be "suspiscous". In our case, in accordance with the tutor, we consider a value around ~8 to be "interesting".
 The lack of irregularities and the obviously named status "packed" furthermore underline this assumption.
-
-
-
 
 #### PeStudio
 The section sizes can be useful in detecting packed executables. For example, if the Virtual Size is much larger than the Size of Raw Data, you know that the section takes up more space in memory than it does on disk.
@@ -61,16 +67,29 @@ In the case of this sample, the differences in size between raw and virtual does
 ### Strings
 Some but not all of the interesting strings, that were found are listed here. Thousands of strings were found.
 
-<br>
-!Restore the window to normal size<br>
-version.dll<br>
-GetCursorPos<br>
-GetDesktopWindow<br>
-GetPixel<br>
-...
-<br>
+Listed are the API-functions of task1.exe, which are most likely to be found in combination with malware samples.
+* Persistence
+    * RegOpenKeyEx
+    * RegSetValueEx
+    * CopyFile
+    * CreateFile
+    * OpenSCManager
+* Encryption
+    * CryptAcquireContext
+* Anti VM
+    * GetVersion - sometimes used for VM detection
+* Keylogging
+    * SetWindowsHookEx
+    * LoadLibrary
+    * GetProcAddress
+    * GetDC - used for taking screenshots
+    * GetCursorPos
+    * BitBlt - used for taking screenshots
+    * FindResource - access resources of the executable
+    * LoadResource - access resources of the executable
+    * LockResource - access resources of the executable
 
-
+When analysing the unpacked children, I also found the function *CreateToolhelp32Snapshot*.
 
 ## Dynamic Analysis <a name="dynamic_analysis"></a>
 After having gathered some initial information, it is not a bad idea to try to run the malware, to get an initial idea on how the malware operates.  
@@ -98,7 +117,16 @@ Values modified: 33
 
 
 ### ProcessMonitor
-To better monitor the malware process, the program "Process Monitor" is run simultaneously besides the sample. Some filters are set, such that we can more easly spot some important entries in procmon. Since the malware should spawn a file, we opted for the following filters:
+#### Operations of the Malware
+<br><img src="img/procmon_general.png" width="400"><br>
+* **Load Image**: This operation indicates that the malware is loading an executable or DLL into memory. Malware often loads additional modules or libraries to extend its functionality or to execute certain operations.
+* **Create File**: The malware might be creating new files on the system. These files could be used for various purposes such as storing configuration data, logs, or payloads. Malware often creates files to persist on the system or to store stolen information.
+* **RegOpenKey, RegQueryValue, RegCloseKey**: These operations involve interacting with the Windows Registry. Malware often uses the registry for persistence, configuration, or to store keys related to its operation. RegOpenKey is used to open a registry key, RegQueryValue is used to query a value within that key, and RegCloseKey is used to close the handle to the registry key once the operation is complete.
+* **Close File**: This operation indicates that the malware has finished its interaction with a file and is closing it. It could be after reading from or writing to the file.
+* **CreateFileMapping**: This operation creates a file mapping object in memory, which can be used to share data between processes or to map a file into memory. Malware might use this for various purposes such as inter-process communication, code injection, or to map files into memory for analysis or manipulation.
+
+#### Finding the Children
+Some filters are set, such that we can more easly spot some important entries in procmon. Since the malware should spawn a file, we opted for the following filters:
 <br>
 <img src="img/procmon_filters.png" width="400">
 <br>
@@ -108,8 +136,18 @@ To better monitor the malware process, the program "Process Monitor" is run simu
 (continuation)
 <br><img src="img/procon_output_2.png" width="1000"><br>
 
-In our test run, no interesting files where generated by the sample. It is to be noted, that multiple tests with different filter settings have been taken different machines and operating systems (Windows 10, 7 and XP).
+<br><img src="img/procmon_processtree.png" width="500"><br>
 
+In our test run, no interesting files where generated by the sample. It is to be noted, that multiple tests with different filter settings have been taken different machines and operating systems (Windows 10, 7 and XP).
+Some malware employs anti-analysis techniques to evade detection and hinder analysis. One common technique is to delay or avoid creating child processes until a certain condition is met. This could be a specific time, system event, or user interaction.
+
+#### Cuckoo
+The signature data found by the tool:
+* PEiD Signatures - Armadillo v1.71
+* screenshot - Take screenshot
+* win_registry - Affect system registries
+* win_files_operation - Affect private profile
+* win_hook - Affect hook table
 
 #### AnyRun
 Since running the malware in a VM did not result in any file propagation, a second analysis has been taken with the online tool "AnyRun". After selecting Windows 7 (32-bit) as our test environment, the analysis resulted with the following data.
@@ -123,6 +161,23 @@ Since running the malware in a VM did not result in any file propagation, a seco
 <br><img src="img/any_run_task1_report.png" width="800"><br>
        
 
+#### Unpac.me
+Since the unpacking wasn’t visible with Process Monitor, we used unpack.me to do it for us.
+Following Informations were found: 
+* Execution
+    * Shared Modules T1129 
+    * access PEB ldr_data
+    * get kernel32 base address
+    * parse PE header
+    * link function at runtime on Windows
+    * get ntdll base address
+* Defense Evasion
+    * Obfuscated Files or Information T1027 
+    * encode data using XOR
+    * encrypt data using RC4 PRGA
+
+There are 2 children that were unpacked.
+<br><img src="img/unpacme.png" width="500"><br>
 
 ### Networking 
 In the following passage, we will try to find out, to which services (if any) the malware tries to connect to.
@@ -161,6 +216,10 @@ No luck this time.
 #### Wireshark
 A thorough write-up of this paragraph has been ommited, since no network activity has been found by Wireshark.
 
+#### HybridAnalysis (Web-Sandbox)
+<br><img src="img/dns_query_1.png" width="500"><br>
+<br><img src="img/dns_query_2.png" width="500"><br>
+<br><img src="img/dns_query_3.png" width="500"><br>
 
 ## Static Analysis <a name="static_analysis"></a>
 This chapter provides an attempt of our analysis of the task1.exe file and it's propagated setupapi.exe file. It is to be noted, that a deeper static analysis has been approached with IDA and Ghidra on the task1.exe file, but due to it being packed and due to time constraints, not much has been found out.
@@ -172,40 +231,42 @@ This chapter provides an attempt of our analysis of the task1.exe file and it's 
 
 
 *setupapi.exe*
-
+* none, due to the lack of the executable
 
 
 ### Exports
 *task1.exe*
 * only one export with the unusual name *SDASQFddefgshdSSSgfdtEghfllTDFSSSSS*
 
+*setupapi.exe*
+* none, due to the lack of the executable
+
 ### Ghidra
 Both task1.exe and setupapi.exe have been analyze with IDA and Ghidra. Unfortunately IDA refused to open both of the files, stating they would contain "maliscious behavior". We instead opted for Ghidra and tried to find out as much as possible with the code and time given.
 Not everything has been brought to paper, since for example task1.exe was packed and the resulting analysis fell out short.
 It is also to be stated that the files task1.exe and the task1.bin files were checked upon. The latter has been provided by the previously mentioned file AnyRun, since we could not retrieve the actual setupapi.exe file via VM.
 
-*task1.exe*
+*task1.exe*<br>
 Packed to some degree. Write-up is ommited, since no useful information has been found out.
 
-*task1.bin*
+*task1.bin*<br>
 From our understanding, this binary contains the unpacked variant of the original file. In such a case, we should see process, on how the setupapi.exe file is created and placed into the directory.
 <br><img src="img/task1_binary_graph.png" width="250"><br>
 Unfortunately, just like before, not much information could be gathered. On one hand due to the lack of knowledge from our part and on the other hand because of some missing references in the code.  
 <br><img src="img/ghidra_undefined_ref.png" width="600"><br>
 
-
-
+*Disclaimer*
+Due to the fact, that we only managed to unpack the malware in a last step, there was no time left for the analysis of the children.
 
 ## Summary <a name="summary"></a>
-
-
-
-
-
-
-
-
+With the foundings at hand, we could establish a basic idea of the malwares operational scope. It seems to be a trojan with keylogging functionalities. We assume that since the malware wasn't unpacked, no DNS requests to a C&C server were attempted.
+This exercise deepended our knowledge with the named tools, which can then be reused in further exercises.
 
 ## References <a name="references"></a>
 - Practical Malware Analysis: The Hands-On Guide to Dissecting Malicious Software - by Michael Sikorski & Andrew Honig (also some explanatory passages where cited from the book unaltered)
 - Online Sandboxing Tool AnyRun - https://any.run/
+- Hybrid Analysis - https://www.hybrid-analysis.com/
+- Cuckoo - https://cuckoo.cert.ee/
+- UnpacMe - https://www.unpac.me/
+- Wireshark Tutorial on LinkedIn - https://www.linkedin.com/advice/0/how-do-you-use-wireshark-analyze-malware-network
+- Analyzing malware samples with ProcMon - https://www.youtube.com/watch?v=GpUIcYbOigg&t=353
