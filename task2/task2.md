@@ -55,20 +55,30 @@ Opening the malware via the program leads to the following graph:
 <br>
 <img src="img/DIE_graph.png" width="600">
 <br>
-Detect it Easy already states with a rather high percentual probability, that the binary is not packed. By looking at the graph and the section, we can see rather low entropy values and as such validate this assumption. As defined in the previous task (see the writeup of task1.exe) a value of greater or equal to seven should hint to a packed program. 
+Detect it Easy already states with a rather high percentual probability, that the binary is not packed. By looking at the graph and the sections, we can see rather low entropy values and as such validate this assumption. As defined in the previous task (see the writeup of task1.exe) a value of greater or equal to seven should hint to a packed program (to the contrary to this case). 
 
 ### Strings
 Some but not all of the interesting strings, that were found are listed here. Thousands of strings were found.
 
-Listed are the API-functions of task1.exe, which are most likely to be found in combination with malware samples.
-* Persistence
+Listed are the API-functions and strings of the task2.bin, which are most likely to be found in combination with malware samples.
+* Malicious
     * `/etc/cron.hourly.gcc.sh` - name is intentional to look like a legit program (`gcc.c`), uses `/lib/libudev.so.6` as an executable (libudev is normally used for accessing `udev`, the device manager of the Linux Kernel), runs a for loop to bring up all network connections even if turned off // 2do check the file if it really does this
-* Network Functionality
+    * some of the contents of the `gcc.sh` script:
+        ```
+        for i in `cat /proc/net/dev|grep :|awk -F: {'print $1'}`; do ifconfig $i up& done
+
+        cp /lib/libudev.so /lib/libudev.so.6
+        ```
+    * `CheckLKM` - checks if rootkit meets installation requirements such as an exact kernel header match and no technologies present that can block the rootkit’s installation, like secure boot or enforced signed loadable kernel module (LKM) loading
+    * `hide.c` - possible program, that contains logic to hide/delete the malware
+    * `DelService` - possible removal of the malware, after exectution?
+* Networking 
     * Connection: Keep-Alive
     * POST %s HTTP/1.1
     * GET %s HTTP/1.1
     * /proc/net/tcp
     * socket:[
+    * http_download
     * ... 
 * Kernel Version Check 
     * FATAL: kernel too old
@@ -77,24 +87,23 @@ Listed are the API-functions of task1.exe, which are most likely to be found in 
     * /etc/localtime
     * usr/share/oneinfo
     * Sunday, Monday, Tuesday ... - may be used for cronjob functionanitlies
-* Execution
+    * timezone
+* Process Management (including Forking Functionalities)
     * proc/self/exe
     * _dl_open_hook - possible hooking exploit
     * Owner died - may spawn multiple instances of itself (botnet), may be a message that the parent and/or child process has died
+    * LinuxExec
+    * kill_process
+    * sleep
+    * sched_setscheduler
+    * fork_handler_pool
+    * __libc_fork
 * Encryption
     * encrypt.c
-
-
-//check
-* PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:/usr/X11R6/bin
-* fromt he gcc.sh script:
-    * cp /lib/libudev.so /lib/libudev.so.6
-    * for i in `cat /proc/net/dev|grep :|awk -F: {'print $1'}`; do ifconfig $i up& done
-* hide.c
-
-
-
- // bookmark: position 1139 in DIE 
+    * CalcFileCRC
+* Miscellaneous
+    * CalcFindIpCrc - no idea, but a search leads to chinese websites
+    * _nl_current_LC_TELEPHONE_used - no idea, but a search leads to chinese websites 
 
 ## Dynamic Analysis <a name="dynamic_analysis"></a>
 After having gathered some initial information, it is not a bad idea to try to run the malware, to get an initial idea on how the malware operates.  
@@ -161,12 +170,13 @@ With the foundings at hand, we could establish a basic idea of the malwares oper
 This exercise deepended our knowledge with the named tools, which can then be reused in further exercises.
 
 ## References <a name="references"></a>
-- Practical Malware Analysis: The Hands-On Guide to Dissecting Malicious Software - by Michael Sikorski & Andrew Honig (also some explanatory passages where cited from the book unaltered)
-- Online Sandboxing Tool AnyRun - https://any.run/
-- Hybrid Analysis - https://www.hybrid-analysis.com/
-- Cuckoo - https://cuckoo.cert.ee/
-- Wireshark Tutorial on LinkedIn - https://www.linkedin.com/advice/0/how-do-you-use-wireshark-analyze-malware-network
-- How to Detect Raising New XORDDOS Linux Trojan - https://www.socinvestigation.com/how-to-detect-raising-new-xorddos-linux-trojan/
-- What is libudev in Linux? - https://www.quora.com/What-is-libudev-in-Linux
-- Is this file (gcc.sh) in cron.hourly malware? - https://stackoverflow.com/questions/36623596/is-this-file-gcc-sh-in-cron-hourly-malware
-- Extra Exploitation Technique 1: _dl_open - https://dangokyo.me/2018/01/20/extra-exploitation-technique-1-_dl_open/
+* Practical Malware Analysis: The Hands-On Guide to Dissecting Malicious Software - by Michael Sikorski & Andrew Honig (also some explanatory passages where cited from the book unaltered)
+* Online Sandboxing Tool AnyRun - https://any.run/
+* Hybrid Analysis - https://www.hybrid-analysis.com/
+* Cuckoo - https://cuckoo.cert.ee/
+* Wireshark Tutorial on LinkedIn - https://www.linkedin.com/advice/0/how-do-you-use-wireshark-analyze-malware-network
+* How to Detect Raising New XORDDOS Linux Trojan - https://www.socinvestigation.com/how-to-detect-raising-new-xorddos-linux-trojan/
+* What is libudev in Linux? - https://www.quora.com/What-is-libudev-in-Linux
+* Is this file (gcc.sh) in cron.hourly malware? - https://stackoverflow.com/questions/36623596/is-this-file-gcc-sh-in-cron-hourly-malware
+* Extra Exploitation Technique 1: _dl_open - https://dangokyo.me/2018/01/20/extra-exploitation-technique-1-_dl_open/
+* Rise in XorDdos: A deeper look at the stealthy DDoS malware targeting Linux devices - https://www.microsoft.com/en-us/security/blog/2022/05/19/rise-in-xorddos-a-deeper-look-at-the-stealthy-ddos-malware-targeting-linux-devices/
