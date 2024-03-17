@@ -62,25 +62,39 @@ Some but not all of the interesting strings, that were found are listed here. Th
 
 Listed are the API-functions of task1.exe, which are most likely to be found in combination with malware samples.
 * Persistence
-    * RegOpenKeyEx
-    * RegSetValueEx
-    * CopyFile
-    * CreateFile
-    * OpenSCManager
+    * `/etc/cron.hourly.gcc.sh` - name is intentional to look like a legit program (`gcc.c`), uses `/lib/libudev.so.6` as an executable (libudev is normally used for accessing `udev`, the device manager of the Linux Kernel), runs a for loop to bring up all network connections even if turned off // 2do check the file if it really does this
+* Network Functionality
+    * Connection: Keep-Alive
+    * POST %s HTTP/1.1
+    * GET %s HTTP/1.1
+    * /proc/net/tcp
+    * socket:[
+    * ... 
+* Kernel Version Check 
+    * FATAL: kernel too old
+    * FATAL: cannot determine kernel version
+* Locale
+    * /etc/localtime
+    * usr/share/oneinfo
+    * Sunday, Monday, Tuesday ... - may be used for cronjob functionanitlies
+* Execution
+    * proc/self/exe
+    * _dl_open_hook - possible hooking exploit
+    * Owner died - may spawn multiple instances of itself (botnet), may be a message that the parent and/or child process has died
 * Encryption
-    * CryptAcquireContext
-* Anti VM
-    * GetVersion - sometimes used for VM detection
-* Keylogging
-    * SetWindowsHookEx
-    * LoadLibrary
-    * GetProcAddress
-    * GetDC - used for taking screenshots
-    * GetCursorPos
-    * BitBlt - used for taking screenshots
-    * FindResource - access resources of the executable
-    * LoadResource - access resources of the executable
-    * LockResource - access resources of the executable
+    * encrypt.c
+
+
+//check
+* PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:/usr/X11R6/bin
+* fromt he gcc.sh script:
+    * cp /lib/libudev.so /lib/libudev.so.6
+    * for i in `cat /proc/net/dev|grep :|awk -F: {'print $1'}`; do ifconfig $i up& done
+* hide.c
+
+
+
+ // bookmark: position 1139 in DIE 
 
 ## Dynamic Analysis <a name="dynamic_analysis"></a>
 After having gathered some initial information, it is not a bad idea to try to run the malware, to get an initial idea on how the malware operates.  
@@ -109,73 +123,28 @@ After having gathered some initial information, it is not a bad idea to try to r
             ww.gzcfr5axf7.com (multiple times)            
             ```
 * Threats:
-    * Extract:
         ```
         AV TROJAN DDoS.XOR sharing XOR Key Checkin
         ET MALWARE DDoS.XOR Checkin
         ET MALWARE DDoS.XOR Checkin via HTTP
         ```
     * "XOR.DDOS" was named after its denial-of-service-related activities on Linux endpoints and servers as well as its usage of XOR-based encryption for its communications.
-
 * Process Graph (appended as pdf):
     * Looking at the graph will present us with a detailed view of all the processes which are somewhat in relation to the malware. Not all of them are relevant, but some can give us an insight of the functionalities of the malware. 
     * First, the trojan tries SSH brute force on thousands of Linux machines at the same time from the already compromised machine, and once it gains an initial foothold. It will download the malicious ELF file using curl and it takes careful measures before and after saving the file, leaving no traces for forensics.
-
-
-
 * Processes:
 
 Most notably about 
-
-
-### Networking 
-In the following passage, we will try to find out, to which services (if any) the malware tries to connect to.
-
-#### INetSim
-We set up an internal network in the range of 192.168.100.0/24 and assigned the IP 192.168.100.100 to the infected Windows 10 VM and 192.168.100.101 to the Kali VM running INetSim. We also changed the DNS-server of the Windows 10 VM with the IP of the interceptor (kali VM). Both files `/etc/network/interfaces` and `/etc/inetsim/inetsim.conf` have been modified in the kali machine, by adding the following lines:
-
-*/etc/network/interfaces*
-```
-auto [INTERFACE NAME]
-iface [INTERFACE NAME] inet static
-address 192.168.100.101
-netmask 255.255.255.0
-```
-
-*/etc/inetsim/inetsim.conf*
-```
-Under the section **# service_bind_address** add `service_bind_address 192.168.100.101` (the IP of my kali VM). "0.0.0.0" should also work.
-
-Under the section **# dns_default_ip** add `dns_default_ip 192.168.100.101` (the IP of my kali VM).
-```
-
-With this approach we hope to intercept the traffic of the infected machine, such that we can determine the connections which the malware tries to make.
-
-Running INetSim with `sudo inetsim`
-<br>
-<img src="img/INetSim.png" width="400">
-<br>
-As seen in the screenshot, we are specifically targetting the protocols such as https, ftp etc.
-
-Let's try to run the malware and see, if the kali VM picks up anything.
-The logs are created after terminating the INetSim session. They can be found at `/var/log/inetsim/report/report.XXXX.txt`.
-Unfortunately, since no report has been created, the malware did not try to establish connections via these protocols.
-No luck this time.
-
-#### Wireshark
-
 
 
 ## Static Analysis <a name="static_analysis"></a>
 This chapter provides an attempt of
 
 ### Imports
-
-
-
+\-
 
 ### Exports
-
+* 
 
 ### Ghidra
 
@@ -198,3 +167,6 @@ This exercise deepended our knowledge with the named tools, which can then be re
 - Cuckoo - https://cuckoo.cert.ee/
 - Wireshark Tutorial on LinkedIn - https://www.linkedin.com/advice/0/how-do-you-use-wireshark-analyze-malware-network
 - How to Detect Raising New XORDDOS Linux Trojan - https://www.socinvestigation.com/how-to-detect-raising-new-xorddos-linux-trojan/
+- What is libudev in Linux? - https://www.quora.com/What-is-libudev-in-Linux
+- Is this file (gcc.sh) in cron.hourly malware? - https://stackoverflow.com/questions/36623596/is-this-file-gcc-sh-in-cron-hourly-malware
+- Extra Exploitation Technique 1: _dl_open - https://dangokyo.me/2018/01/20/extra-exploitation-technique-1-_dl_open/
