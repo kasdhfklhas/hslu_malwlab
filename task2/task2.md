@@ -2,8 +2,11 @@
 ## Formalities
 - Authors: *Fabio Schmidt*, *Jonas Eggenberg*
 - Tutor: *Dr. Tim Blazytko*
-- Date: **
-- Due Date: **
+- Date: *15.03.2024*
+- Due Date: *27.03.2024*
+
+// 2 remove: explain what you paste. also facts must be explained by text (see feedback of week 1)
+
 
 ## Introduction
 This write-up contains an analysis of the task2.exe file of the second MALWLAB assignment. The following questions were used (not exclusively) as a guide line throughout this text.
@@ -49,6 +52,9 @@ DiE presents us with the following initial informations.
     * Compiler: GCC(4.1.2 20080704 (Red Hat 4.1.2-46))
     * Language: C/C++
 
+As we can see by the output, the binary is of the type `ELF` (the counterpart to the PE file format on the Windows operating system) and was written in C and/or C++. This fact is further strenghtend by the outputted strings in one of the next chapters. Many files can be found with the `.c` extension.
+
+
 ### To be packed, or not to be packed?
 #### Detect it Easy
 Opening the malware via the program leads to the following graph:
@@ -61,7 +67,7 @@ Detect it Easy already states with a rather high percentual probability, that th
 Some but not all of the interesting strings, that were found are listed here. Thousands of strings were found.
 
 Listed are the API-functions and strings of the task2.bin, which are most likely to be found in combination with malware samples.
-* Malicious
+* Definately Malicious
     * `/etc/cron.hourly.gcc.sh` - name is intentional to look like a legit program (`gcc.c`), uses `/lib/libudev.so.6` as an executable (libudev is normally used for accessing `udev`, the device manager of the Linux Kernel), runs a for loop to bring up all network connections even if turned off // 2do check the file if it really does this
     * some of the contents of the `gcc.sh` script:
         ```
