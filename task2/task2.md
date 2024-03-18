@@ -75,7 +75,7 @@ Listed are the API-functions and strings of the task2.bin, which are most likely
 
         cp /lib/libudev.so /lib/libudev.so.6
         ```
-    * `CheckLKM` - checks if rootkit meets installation requirements such as an exact kernel header match and no technologies present that can block the rootkit’s installation, like secure boot or enforced signed loadable kernel module (LKM) loading
+    * `/proc/rs_dev` / `CheckLKM` - checks if rootkit meets installation requirements such as an exact kernel header match and no technologies present that can block the rootkit’s installation, like secure boot or enforced signed loadable kernel module (LKM) loading
     * `hide.c` - possible program, that contains logic to hide/delete the malware
     * `DelService` - possible removal of the malware, after exectution?
 * Networking 
